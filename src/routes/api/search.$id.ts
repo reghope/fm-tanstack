@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
-import { getFaceById, searchSimilarFaces } from '@/lib/qdrant'
+import { getFaceById, searchSimilarFaces } from '@/server/qdrant'
+import { normalizeSearchPayload } from '@/server/normalize-search-payload'
 
 export const Route = createFileRoute('/api/search/$id')({
   server: {
@@ -26,14 +27,21 @@ export const Route = createFileRoute('/api/search/$id')({
             threshold,
             offset,
           )
+          const normalizedResults = searchResult.results.map((result) => ({
+            id: result.id,
+            score: result.score,
+            payload: normalizeSearchPayload(result.payload),
+          }))
 
           return json({
             success: true,
             face: {
               id: face.id,
-              payload: face.payload,
+              payload: normalizeSearchPayload(
+                face.payload as Record<string, unknown> | undefined,
+              ),
             },
-            results: searchResult.results,
+            results: normalizedResults,
             pagination: {
               total: searchResult.total,
               page: searchResult.page,

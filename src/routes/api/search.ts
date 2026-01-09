@@ -1,8 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
-import { searchFaces } from '@/lib/qdrant'
-import { uploadImage } from '@/lib/s3'
-import { generateEmbeddingFromBase64 } from '@/lib/deepface'
+import { searchFaces } from '@/server/qdrant'
+import { uploadImage } from '@/server/s3'
+import { generateEmbeddingFromBase64 } from '@/server/deepface'
+import { normalizeSearchPayload } from '@/server/normalize-search-payload'
 
 export const Route = createFileRoute('/api/search')({
   server: {
@@ -60,7 +61,17 @@ export const Route = createFileRoute('/api/search')({
           }
 
           const embedding = embeddingResult.faces[0].embedding
-          const searchResult = await searchFaces(embedding, limit, threshold, offset)
+          const searchResult = await searchFaces(
+            embedding,
+            limit,
+            threshold,
+            offset,
+          )
+          const normalizedResults = searchResult.results.map((result) => ({
+            id: result.id,
+            score: result.score,
+            payload: normalizeSearchPayload(result.payload),
+          }))
 
           return json({
             success: true,
@@ -68,7 +79,7 @@ export const Route = createFileRoute('/api/search')({
               croppedImageUrl,
               fullImageUrl,
             },
-            results: searchResult.results,
+            results: normalizedResults,
             pagination: {
               total: searchResult.total,
               page: searchResult.page,

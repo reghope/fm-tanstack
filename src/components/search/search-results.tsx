@@ -5,33 +5,12 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
+import type { Pagination, SearchResult } from "@/shared/search-types";
 
 function truncateId(id: string | number): string {
   const str = String(id);
   if (str.length <= 12) return str;
   return `${str.slice(0, 8)}...${str.slice(-4)}`;
-}
-
-interface SearchResult {
-  id: string | number;
-  score: number;
-  payload?: {
-    imageUrl?: string;      // Face/cropped image URL from Qdrant
-    originalUrl?: string;   // Original source URL
-    croppedImageUrl?: string;
-    fullImageUrl?: string;
-    source_url?: string;
-    image_url?: string;
-    name?: string;
-    [key: string]: unknown;
-  };
-}
-
-interface Pagination {
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
 }
 
 interface SearchResultsProps {
@@ -47,10 +26,8 @@ interface SearchResultsProps {
 function ResultCard({ result }: { result: SearchResult }) {
   const [copied, setCopied] = useState(false);
 
-  // Use imageUrl from Qdrant, fallback to other possible field names
-  const faceImageUrl = result.payload?.imageUrl || result.payload?.croppedImageUrl || result.payload?.image_url;
-  // Original URL goes underneath the image
-  const originalUrl = result.payload?.originalUrl || result.payload?.source_url || result.payload?.fullImageUrl;
+  const faceImageUrl = result.payload?.faceImageUrl;
+  const originalUrl = result.payload?.originalUrl;
   const matchPercent = (result.score * 100).toFixed(1);
   const displayId = truncateId(result.id);
   const fullId = String(result.id);
