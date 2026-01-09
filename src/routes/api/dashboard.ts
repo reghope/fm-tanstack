@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import {
+  getDashboardApiKey,
   isDashboardAuthenticated,
   verifyDashboardApiKey,
 } from '@/server/dashboard-auth'
@@ -78,10 +79,22 @@ async function apiRequest(
 
 function requireDashboardAuth(request: Request, apiKey?: string) {
   if (isDashboardAuthenticated(request)) {
-    return { ok: true as const }
+    const serverKey = getDashboardApiKey()
+    if (!serverKey) {
+      return {
+        ok: false as const,
+        status: 500,
+        message: 'API_KEY is not configured',
+      }
+    }
+    return { ok: true as const, apiKey: serverKey }
   }
 
-  return verifyDashboardApiKey(apiKey)
+  const verified = verifyDashboardApiKey(apiKey)
+  if (!verified.ok) {
+    return verified
+  }
+  return { ok: true as const, apiKey: apiKey! }
 }
 
 export const Route = createFileRoute('/api/dashboard')({
@@ -101,6 +114,7 @@ export const Route = createFileRoute('/api/dashboard')({
           return json({ error: auth.message }, { status: auth.status })
         }
 
+        const apiKey = auth.apiKey
         if (!body.intent) {
           return json({ error: 'Missing intent' }, { status: 400 })
         }
@@ -112,10 +126,10 @@ export const Route = createFileRoute('/api/dashboard')({
             case 'list': {
               const [sitemapJobs, scrapeBatches, uploadJobs, queues] =
                 await Promise.all([
-                  apiRequest(body.apiKey!, '/api/sitemap/jobs?limit=50'),
-                  apiRequest(body.apiKey!, '/api/scrape/batches?limit=50'),
-                  apiRequest(body.apiKey!, '/api/s3/jobs?limit=50'),
-                  apiRequest(body.apiKey!, '/api/ops/queues?limit=50'),
+                  apiRequest(apiKey, '/api/sitemap/jobs?limit=50'),
+                  apiRequest(apiKey, '/api/scrape/batches?limit=50'),
+                  apiRequest(apiKey, '/api/s3/jobs?limit=50'),
+                  apiRequest(apiKey, '/api/ops/queues?limit=50'),
                 ])
 
               return json({
@@ -140,7 +154,7 @@ export const Route = createFileRoute('/api/dashboard')({
               }
 
               const result = await apiRequest(
-                body.apiKey!,
+                apiKey,
                 `/api/sitemap?${params.toString()}`
               )
 
@@ -176,7 +190,7 @@ export const Route = createFileRoute('/api/dashboard')({
               }
 
               const result = await apiRequest(
-                body.apiKey!,
+                apiKey,
                 `/api/sitemap/jobs/${jobId}/scrape`,
                 {
                   method: 'POST',
@@ -208,12 +222,12 @@ export const Route = createFileRoute('/api/dashboard')({
               }
 
               if (action === 'delete') {
-                await apiRequest(body.apiKey!, `/api/sitemap/jobs/${id}`, {
+                await apiRequest(apiKey, `/api/sitemap/jobs/${id}`, {
                   method: 'DELETE',
                 })
               } else {
                 await apiRequest(
-                  body.apiKey!,
+                  apiKey,
                   `/api/sitemap/jobs/${id}/${action}`,
                   { method: 'POST' }
                 )
@@ -228,7 +242,7 @@ export const Route = createFileRoute('/api/dashboard')({
               }
 
               const result = await apiRequest(
-                body.apiKey!,
+                apiKey,
                 `/api/scrape/batches/${id}/cancel`,
                 { method: 'POST' }
               )
@@ -242,7 +256,7 @@ export const Route = createFileRoute('/api/dashboard')({
               }
 
               const result = await apiRequest(
-                body.apiKey!,
+                apiKey,
                 `/api/s3/jobs/${id}/cancel`,
                 { method: 'POST' }
               )
@@ -275,11 +289,11 @@ export const Route = createFileRoute('/api/dashboard')({
               const results = await Promise.allSettled(
                 ids.map((id) =>
                   action === 'delete'
-                    ? apiRequest(body.apiKey!, `/api/sitemap/jobs/${id}`, {
+                    ? apiRequest(apiKey, `/api/sitemap/jobs/${id}`, {
                         method: 'DELETE',
                       })
                     : apiRequest(
-                        body.apiKey!,
+                        apiKey,
                         `/api/sitemap/jobs/${id}/${action}`,
                         { method: 'POST' }
                       )

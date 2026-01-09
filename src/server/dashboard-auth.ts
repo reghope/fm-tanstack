@@ -60,3 +60,7 @@ export function buildAuthCookie(value: string | null) {
 export function getDashboardCookieValue() {
   return getExpectedCookieValue()
 }
+
+export function getDashboardApiKey() {
+  return API_KEY || null
+}
