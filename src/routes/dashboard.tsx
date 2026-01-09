@@ -367,6 +367,85 @@ function Dashboard() {
     }
   }
 
+  if (!isAuthenticated) {
+    return (
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#fff7ed,_#f8fafc_50%,_#e2e8f0)] text-slate-900">
+        <div className="mx-auto flex w-full max-w-xl flex-col gap-6 px-6 py-16">
+          <header className="space-y-2 text-center">
+            <span className="text-xs uppercase tracking-[0.3em] text-slate-500">
+              Control Room
+            </span>
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+              Sign in to the Ops Dashboard
+            </h1>
+            <p className="text-sm text-slate-600">
+              Enter the server API key to unlock crawl, scrape, and queue
+              controls.
+            </p>
+          </header>
+
+          <Card className="border-slate-200/80 bg-white/80 backdrop-blur">
+            <CardHeader>
+              <CardTitle>API Key</CardTitle>
+              <CardDescription>
+                Your session will stay active while the cookie is valid.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form onSubmit={handleConnect} className="space-y-4">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    API Key
+                  </label>
+                  <input
+                    type="password"
+                    value={apiKeyInput}
+                    onChange={(event) => setApiKeyInput(event.target.value)}
+                    placeholder="Enter API key"
+                    className={`${inputClassName} mt-2`}
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={!apiKeyInput || isLoading || isCheckingSession}
+                  className="w-full gap-2"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  {isCheckingSession ? 'Checking session...' : 'Connect'}
+                </Button>
+              </form>
+
+              <div className="rounded-lg border border-slate-200/80 bg-white/80 p-4 text-sm text-slate-600">
+                <div className="flex items-center justify-between">
+                  <span>Status</span>
+                  <span
+                    className={`rounded-full px-2 py-1 text-xs font-medium ${
+                      isCheckingSession ? 'bg-slate-100' : 'bg-amber-100'
+                    }`}
+                  >
+                    {isCheckingSession ? 'Checking' : 'Locked'}
+                  </span>
+                </div>
+                {error && (
+                  <p className="mt-3 flex items-center gap-2 text-xs text-rose-600">
+                    <AlertCircle className="h-4 w-4" />
+                    {error}
+                  </p>
+                )}
+                {success && (
+                  <p className="mt-3 flex items-center gap-2 text-xs text-emerald-600">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {success}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#fff7ed,_#f8fafc_50%,_#e2e8f0)] text-slate-900">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-12">
