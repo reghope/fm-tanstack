@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 
 const API_KEY = process.env.API_KEY || ''
 const COOKIE_NAME = 'dashboard_auth'
-const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 12
+const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24
 
 function getExpectedCookieValue() {
   if (!API_KEY) {
