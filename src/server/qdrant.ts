@@ -5,9 +5,14 @@ const parsedUrl = new URL(qdrantUrl);
 const isLocalQdrant = ["localhost", "127.0.0.1", "::1"].includes(
   parsedUrl.hostname
 );
+const allowInsecure =
+  process.env.QDRANT_ALLOW_INSECURE === "true" ||
+  process.env.QDRANT_ALLOW_INSECURE === "1";
 
-if (parsedUrl.protocol !== "https:" && !isLocalQdrant) {
-  throw new Error("QDRANT_URL must use https for non-local deployments");
+if (parsedUrl.protocol !== "https:" && !isLocalQdrant && !allowInsecure) {
+  throw new Error(
+    "QDRANT_URL must use https for non-local deployments (set QDRANT_ALLOW_INSECURE=true to override)"
+  );
 }
 
 export const qdrantClient = new QdrantClient({
