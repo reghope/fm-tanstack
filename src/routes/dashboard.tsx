@@ -101,12 +101,12 @@ function getStatusStyles(status: string) {
     return 'bg-rose-100 text-rose-800'
   }
   if (normalized.includes('completed')) {
-    return 'bg-slate-200 text-slate-700'
+    return 'bg-zinc-200 text-zinc-700'
   }
   if (normalized.includes('pending')) {
     return 'bg-sky-100 text-sky-800'
   }
-  return 'bg-slate-100 text-slate-700'
+  return 'bg-zinc-100 text-zinc-700'
 }
 
 async function dashboardRequest(
@@ -370,22 +370,22 @@ function Dashboard() {
 
   if (!isAuthenticated) {
     return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#fff7ed,_#f8fafc_50%,_#e2e8f0)] text-slate-900">
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#fff7ed,_#f8fafc_50%,_#e2e8f0)] text-zinc-900">
         <div className="mx-auto flex w-full max-w-xl flex-col gap-6 px-6 py-16">
           <header className="space-y-2 text-center">
-            <span className="text-xs uppercase tracking-[0.3em] text-slate-500">
+            <span className="text-xs uppercase tracking-[0.3em] text-zinc-500">
               Control Room
             </span>
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">
               Sign in to the Ops Dashboard
             </h1>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-zinc-600">
               Enter the server API key to unlock crawl, scrape, and queue
               controls.
             </p>
           </header>
 
-          <Card className="border-slate-200/80 bg-white/80 backdrop-blur">
+          <Card className="border-zinc-200/80 bg-white/80 backdrop-blur">
             <CardHeader>
               <CardTitle>API Key</CardTitle>
               <CardDescription>
@@ -395,7 +395,7 @@ function Dashboard() {
             <CardContent className="space-y-4">
               <form onSubmit={handleConnect} className="space-y-4">
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     API Key
                   </label>
                   <input
@@ -416,12 +416,12 @@ function Dashboard() {
                 </Button>
               </form>
 
-              <div className="rounded-lg border border-slate-200/80 bg-white/80 p-4 text-sm text-slate-600">
+              <div className="rounded-lg border border-zinc-200/80 bg-white/80 p-4 text-sm text-zinc-600">
                 <div className="flex items-center justify-between">
                   <span>Status</span>
                   <span
                     className={`rounded-full px-2 py-1 text-xs font-medium ${
-                      isCheckingSession ? 'bg-slate-100' : 'bg-amber-100'
+                      isCheckingSession ? 'bg-zinc-100' : 'bg-amber-100'
                     }`}
                   >
                     {isCheckingSession ? 'Checking' : 'Locked'}
@@ -448,17 +448,17 @@ function Dashboard() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#fff7ed,_#f8fafc_50%,_#e2e8f0)] text-slate-900">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#fff7ed,_#f8fafc_50%,_#e2e8f0)] text-zinc-900">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-12">
         <header className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <span className="text-xs uppercase tracking-[0.3em] text-slate-500">
+            <span className="text-xs uppercase tracking-[0.3em] text-zinc-500">
               Control Room
             </span>
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">
               Crawl & Scrape Ops Dashboard
             </h1>
-            <p className="max-w-2xl text-sm text-slate-600">
+            <p className="max-w-2xl text-sm text-zinc-600">
               Start crawls, spin up scrape batches, and keep Redis-backed queues
               moving. All actions are verified against the server API key.
             </p>
@@ -474,7 +474,7 @@ function Dashboard() {
               Refresh
             </Button>
             {lastUpdated && (
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-zinc-500">
                 Updated {lastUpdated.toLocaleTimeString()}
               </span>
             )}
@@ -491,7 +491,7 @@ function Dashboard() {
           </div>
         </header>
 
-        <Card className="border-slate-200/80 bg-white/70 backdrop-blur">
+        <Card className="border-zinc-200/80 bg-white/70 backdrop-blur">
           <CardHeader>
             <CardTitle>Access & Queue Health</CardTitle>
             <CardDescription>
@@ -502,7 +502,7 @@ function Dashboard() {
             <form onSubmit={handleConnect} className="space-y-4">
               {!isAuthenticated && (
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     API Key
                   </label>
                   <div className="mt-2 flex flex-col gap-3 sm:flex-row">
@@ -524,14 +524,14 @@ function Dashboard() {
                   </div>
                 </div>
               )}
-              <div className="rounded-lg border border-slate-200/80 bg-white/80 p-4">
-                <div className="flex items-center justify-between text-sm text-slate-600">
+              <div className="rounded-lg border border-zinc-200/80 bg-white/80 p-4">
+                <div className="flex items-center justify-between text-sm text-zinc-600">
                   <span>Status</span>
                   <span
                     className={`rounded-full px-2 py-1 text-xs font-medium ${
                       isAuthenticated
                         ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-slate-100'
+                        : 'bg-zinc-100'
                     }`}
                   >
                     {isCheckingSession
@@ -558,7 +558,7 @@ function Dashboard() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               {queueEntries.length === 0 && (
-                <div className="rounded-lg border border-dashed border-slate-300 p-6 text-sm text-slate-500">
+                <div className="rounded-lg border border-dashed border-zinc-300 p-6 text-sm text-zinc-500">
                   {isAuthenticated
                     ? 'Queue stats unavailable.'
                     : 'Queue stats load after authentication.'}
@@ -573,18 +573,18 @@ function Dashboard() {
                 return (
                   <div
                     key={queueName}
-                    className="rounded-lg border border-slate-200/80 bg-white/80 p-4"
+                    className="rounded-lg border border-zinc-200/80 bg-white/80 p-4"
                   >
-                    <p className="text-xs uppercase tracking-wide text-slate-500">
+                    <p className="text-xs uppercase tracking-wide text-zinc-500">
                       {queueName}
                     </p>
                     <div className="mt-2 flex items-baseline gap-3">
-                      <span className="text-2xl font-semibold text-slate-900">
+                      <span className="text-2xl font-semibold text-zinc-900">
                         {numberFormatter.format(pending)}
                       </span>
-                      <span className="text-xs text-slate-500">pending</span>
+                      <span className="text-xs text-zinc-500">pending</span>
                     </div>
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="mt-2 text-xs text-zinc-500">
                       {numberFormatter.format(active)} active
                     </p>
                   </div>
@@ -595,10 +595,10 @@ function Dashboard() {
         </Card>
 
         <section className="grid gap-6 lg:grid-cols-2">
-          <Card className="border-slate-200/80 bg-white/70 backdrop-blur">
+          <Card className="border-zinc-200/80 bg-white/70 backdrop-blur">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Rocket className="h-5 w-5 text-slate-700" />
+                <Rocket className="h-5 w-5 text-zinc-700" />
                 New Crawl Job
               </CardTitle>
               <CardDescription>
@@ -608,7 +608,7 @@ function Dashboard() {
             <CardContent>
               <form onSubmit={handleCreateCrawl} className="space-y-4">
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     Domain
                   </label>
                   <input
@@ -627,7 +627,7 @@ function Dashboard() {
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       Max URLs
                     </label>
                     <input
@@ -643,7 +643,7 @@ function Dashboard() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       Concurrency
                     </label>
                     <input
@@ -666,10 +666,10 @@ function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-slate-200/80 bg-white/70 backdrop-blur">
+          <Card className="border-zinc-200/80 bg-white/70 backdrop-blur">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Upload className="h-5 w-5 text-slate-700" />
+                <Upload className="h-5 w-5 text-zinc-700" />
                 New Scrape Batch
               </CardTitle>
               <CardDescription>
@@ -679,7 +679,7 @@ function Dashboard() {
             <CardContent>
               <form onSubmit={handleCreateScrape} className="space-y-4">
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     Crawl Job ID
                   </label>
                   <input
@@ -697,7 +697,7 @@ function Dashboard() {
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       Pass Index
                     </label>
                     <input
@@ -713,7 +713,7 @@ function Dashboard() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       Max Images
                     </label>
                     <input
@@ -730,7 +730,7 @@ function Dashboard() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     S3 Key (optional)
                   </label>
                   <input
@@ -747,7 +747,7 @@ function Dashboard() {
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       Concurrency
                     </label>
                     <input
@@ -762,7 +762,7 @@ function Dashboard() {
                       className={`${inputClassName} mt-2`}
                     />
                   </div>
-                  <div className="flex flex-col gap-2 text-xs text-slate-600">
+                  <div className="flex flex-col gap-2 text-xs text-zinc-600">
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
@@ -773,7 +773,7 @@ function Dashboard() {
                             embed: event.target.checked,
                           }))
                         }
-                        className="h-4 w-4 rounded border-slate-300"
+                        className="h-4 w-4 rounded border-zinc-300"
                       />
                       Embed
                     </label>
@@ -787,7 +787,7 @@ function Dashboard() {
                             embedWait: event.target.checked,
                           }))
                         }
-                        className="h-4 w-4 rounded border-slate-300"
+                        className="h-4 w-4 rounded border-zinc-300"
                       />
                       Embed wait
                     </label>
@@ -801,7 +801,7 @@ function Dashboard() {
                             embedMissing: event.target.checked,
                           }))
                         }
-                        className="h-4 w-4 rounded border-slate-300"
+                        className="h-4 w-4 rounded border-zinc-300"
                       />
                       Embed missing
                     </label>
@@ -816,7 +816,7 @@ function Dashboard() {
         </section>
 
         <section className="grid gap-6">
-          <Card className="border-slate-200/80 bg-white/70 backdrop-blur">
+          <Card className="border-zinc-200/80 bg-white/70 backdrop-blur">
             <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <CardTitle>Sitemap Jobs</CardTitle>
@@ -859,7 +859,7 @@ function Dashboard() {
             </CardHeader>
             <CardContent className="space-y-3">
               {sitemapJobs.length === 0 ? (
-                <p className="text-sm text-slate-500">No sitemap jobs found.</p>
+                <p className="text-sm text-zinc-500">No sitemap jobs found.</p>
               ) : (
                 sitemapJobs.map((job) => {
                   const id = getJobId(job)
@@ -867,13 +867,13 @@ function Dashboard() {
                   return (
                     <div
                       key={String(id)}
-                      className="flex flex-col gap-3 rounded-lg border border-slate-200/80 bg-white/80 p-4 md:flex-row md:items-center md:justify-between"
+                      className="flex flex-col gap-3 rounded-lg border border-zinc-200/80 bg-white/80 p-4 md:flex-row md:items-center md:justify-between"
                     >
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">
+                        <p className="text-sm font-semibold text-zinc-900">
                           {String(id)}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-zinc-500">
                           {formatDetail(job) || 'No details available'}
                         </p>
                       </div>
@@ -924,7 +924,7 @@ function Dashboard() {
           </Card>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <Card className="border-slate-200/80 bg-white/70 backdrop-blur">
+            <Card className="border-zinc-200/80 bg-white/70 backdrop-blur">
               <CardHeader>
                 <CardTitle>Scrape Batches</CardTitle>
                 <CardDescription>
@@ -933,7 +933,7 @@ function Dashboard() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {scrapeBatches.length === 0 ? (
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-zinc-500">
                     No scrape batches found.
                   </p>
                 ) : (
@@ -943,13 +943,13 @@ function Dashboard() {
                     return (
                       <div
                         key={String(id)}
-                        className="flex flex-col gap-3 rounded-lg border border-slate-200/80 bg-white/80 p-4"
+                        className="flex flex-col gap-3 rounded-lg border border-zinc-200/80 bg-white/80 p-4"
                       >
                         <div>
-                          <p className="text-sm font-semibold text-slate-900">
+                          <p className="text-sm font-semibold text-zinc-900">
                             {String(id)}
                           </p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-zinc-500">
                             {formatDetail(job) || 'No details available'}
                           </p>
                         </div>
@@ -979,7 +979,7 @@ function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border-slate-200/80 bg-white/70 backdrop-blur">
+            <Card className="border-zinc-200/80 bg-white/70 backdrop-blur">
               <CardHeader>
                 <CardTitle>Upload Jobs</CardTitle>
                 <CardDescription>
@@ -988,7 +988,7 @@ function Dashboard() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {uploadJobs.length === 0 ? (
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-zinc-500">
                     No upload jobs found.
                   </p>
                 ) : (
@@ -998,13 +998,13 @@ function Dashboard() {
                     return (
                       <div
                         key={String(id)}
-                        className="flex flex-col gap-3 rounded-lg border border-slate-200/80 bg-white/80 p-4"
+                        className="flex flex-col gap-3 rounded-lg border border-zinc-200/80 bg-white/80 p-4"
                       >
                         <div>
-                          <p className="text-sm font-semibold text-slate-900">
+                          <p className="text-sm font-semibold text-zinc-900">
                             {String(id)}
                           </p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-zinc-500">
                             {formatDetail(job) || 'No details available'}
                           </p>
                         </div>
@@ -1032,7 +1032,7 @@ function Dashboard() {
                   })
                 )}
               </CardContent>
-              <CardFooter className="text-xs text-slate-500">
+              <CardFooter className="text-xs text-zinc-500">
                 Upload cancel uses the `/api/s3/jobs/:id/cancel` endpoint.
               </CardFooter>
             </Card>
