@@ -124,19 +124,45 @@ export const Route = createFileRoute('/api/dashboard')({
 
           switch (body.intent) {
             case 'list': {
-              const [sitemapJobs, scrapeBatches, uploadJobs, queues] =
-                await Promise.all([
-                  apiRequest(apiKey, '/api/sitemap/jobs?limit=50'),
-                  apiRequest(apiKey, '/api/scrape/batches?limit=50'),
-                  apiRequest(apiKey, '/api/s3/jobs?limit=50'),
-                  apiRequest(apiKey, '/api/ops/queues?limit=50'),
-                ])
+              const results = await Promise.allSettled([
+                apiRequest(apiKey, '/api/sitemap/jobs?limit=50'),
+                apiRequest(apiKey, '/api/scrape/batches?limit=50'),
+                apiRequest(apiKey, '/api/s3/jobs?limit=50'),
+                apiRequest(apiKey, '/api/ops/queues?limit=50'),
+              ])
+
+              const [sitemapJobs, scrapeBatches, uploadJobs, queues] = results
 
               return json({
-                sitemapJobs,
-                scrapeBatches,
-                uploadJobs,
-                queues,
+                sitemapJobs:
+                  sitemapJobs.status === 'fulfilled'
+                    ? sitemapJobs.value
+                    : null,
+                scrapeBatches:
+                  scrapeBatches.status === 'fulfilled'
+                    ? scrapeBatches.value
+                    : null,
+                uploadJobs:
+                  uploadJobs.status === 'fulfilled' ? uploadJobs.value : null,
+                queues: queues.status === 'fulfilled' ? queues.value : null,
+                errors: {
+                  sitemapJobs:
+                    sitemapJobs.status === 'rejected'
+                      ? sitemapJobs.reason?.message || 'Request failed'
+                      : null,
+                  scrapeBatches:
+                    scrapeBatches.status === 'rejected'
+                      ? scrapeBatches.reason?.message || 'Request failed'
+                      : null,
+                  uploadJobs:
+                    uploadJobs.status === 'rejected'
+                      ? uploadJobs.reason?.message || 'Request failed'
+                      : null,
+                  queues:
+                    queues.status === 'rejected'
+                      ? queues.reason?.message || 'Request failed'
+                      : null,
+                },
               })
             }
             case 'crawl.create': {

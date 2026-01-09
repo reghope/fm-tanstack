@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import {
   AlertCircle,
   CheckCircle2,
@@ -10,6 +10,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -146,6 +147,13 @@ function Dashboard() {
   const [scrapeBatches, setScrapeBatches] = useState<JobRecord[]>([])
   const [uploadJobs, setUploadJobs] = useState<JobRecord[]>([])
   const [queues, setQueues] = useState<Record<string, unknown> | null>(null)
+  const [jobErrors, setJobErrors] = useState<{
+    sitemapJobs?: string | null
+    scrapeBatches?: string | null
+    uploadJobs?: string | null
+    queues?: string | null
+  }>({})
+  const jobErrorSnapshot = useRef(jobErrors)
 
   const [crawlForm, setCrawlForm] = useState({
     domain: '',
@@ -218,6 +226,33 @@ function Dashboard() {
       setQueues(
         data.queues && typeof data.queues === 'object' ? data.queues : null
       )
+      const nextErrors =
+        data.errors && typeof data.errors === 'object'
+          ? (data.errors as typeof jobErrors)
+          : {}
+      setJobErrors(nextErrors)
+      const previousErrors = jobErrorSnapshot.current
+      if (nextErrors.sitemapJobs && nextErrors.sitemapJobs !== previousErrors.sitemapJobs) {
+        toast.error('Sitemap jobs unavailable', {
+          description: nextErrors.sitemapJobs,
+        })
+      }
+      if (nextErrors.scrapeBatches && nextErrors.scrapeBatches !== previousErrors.scrapeBatches) {
+        toast.error('Scrape batches unavailable', {
+          description: nextErrors.scrapeBatches,
+        })
+      }
+      if (nextErrors.uploadJobs && nextErrors.uploadJobs !== previousErrors.uploadJobs) {
+        toast.error('Upload jobs unavailable', {
+          description: nextErrors.uploadJobs,
+        })
+      }
+      if (nextErrors.queues && nextErrors.queues !== previousErrors.queues) {
+        toast.error('Queue stats unavailable', {
+          description: nextErrors.queues,
+        })
+      }
+      jobErrorSnapshot.current = nextErrors
       setLastUpdated(new Date())
     } catch (requestError) {
       setError(
@@ -1008,9 +1043,7 @@ function Dashboard() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {uploadJobs.length === 0 ? (
-                  <p className="text-sm text-zinc-500">
-                    No upload jobs found.
-                  </p>
+                  <p className="text-sm text-zinc-500">No upload jobs found.</p>
                 ) : (
                   uploadJobs.map((job) => {
                     const id = getJobId(job)
