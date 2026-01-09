@@ -4,7 +4,6 @@ export interface SearchResultPayload {
   name?: string;
   croppedImageUrl?: string;
   fullImageUrl?: string;
-  metadata?: Record<string, unknown>;
 }
 
 export interface SearchResult {

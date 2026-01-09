@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { getFaceById, searchSimilarFaces } from '@/server/qdrant'
 import { normalizeSearchPayload } from '@/server/normalize-search-payload'
+import { parseSearchQueryParams } from '@/server/api-validation'
 
 export const Route = createFileRoute('/api/search/$id')({
   server: {
@@ -16,9 +17,12 @@ export const Route = createFileRoute('/api/search/$id')({
           }
 
           const { searchParams } = new URL(request.url)
-          const limit = parseInt(searchParams.get('limit') || '25')
-          const threshold = parseFloat(searchParams.get('threshold') || '0.6')
-          const page = parseInt(searchParams.get('page') || '1')
+          const parsedQuery = parseSearchQueryParams(searchParams)
+          if ('error' in parsedQuery) {
+            return json({ error: parsedQuery.error }, { status: parsedQuery.status })
+          }
+
+          const { limit, threshold, page } = parsedQuery.data
           const offset = (page - 1) * limit
 
           const searchResult = await searchSimilarFaces(

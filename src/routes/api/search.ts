@@ -4,25 +4,22 @@ import { searchFaces } from '@/server/qdrant'
 import { uploadImage } from '@/server/s3'
 import { generateEmbeddingFromBase64 } from '@/server/deepface'
 import { normalizeSearchPayload } from '@/server/normalize-search-payload'
+import { parseSearchBody } from '@/server/api-validation'
 
 export const Route = createFileRoute('/api/search')({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          const {
-            croppedImageData,
-            fullImageData,
-            limit = 25,
-            threshold = 0.6,
-            page = 1,
-          } = await request.json()
+          const parsedBody = parseSearchBody(await request.json().catch(() => null))
+          if ('error' in parsedBody) {
+            return json({ error: parsedBody.error }, { status: parsedBody.status })
+          }
+
+          const { croppedImageData, fullImageData, limit, threshold, page } =
+            parsedBody.data
 
           const offset = (page - 1) * limit
-
-          if (!croppedImageData) {
-            return json({ error: 'Missing croppedImageData' }, { status: 400 })
-          }
 
           const uploadId = crypto.randomUUID()
           const timestamp = Date.now()

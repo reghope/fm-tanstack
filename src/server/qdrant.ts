@@ -2,6 +2,13 @@ import { QdrantClient } from "@qdrant/js-client-rest";
 
 const qdrantUrl = process.env.QDRANT_URL || "http://localhost:6333";
 const parsedUrl = new URL(qdrantUrl);
+const isLocalQdrant = ["localhost", "127.0.0.1", "::1"].includes(
+  parsedUrl.hostname
+);
+
+if (parsedUrl.protocol !== "https:" && !isLocalQdrant) {
+  throw new Error("QDRANT_URL must use https for non-local deployments");
+}
 
 export const qdrantClient = new QdrantClient({
   url: `${parsedUrl.protocol}//${parsedUrl.hostname}`,

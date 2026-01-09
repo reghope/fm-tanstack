@@ -25,6 +25,5 @@ export function normalizeSearchPayload(
     name,
     croppedImageUrl: payload.croppedImageUrl as string | undefined,
     fullImageUrl: payload.fullImageUrl as string | undefined,
-    metadata: payload,
   }
 }

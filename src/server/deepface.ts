@@ -1,4 +1,44 @@
 const DEEPFACE_API = process.env.DEEPFACE_API_URL || "https://api1.intuvo.co.uk";
+const DEFAULT_TIMEOUT_MS = 10000;
+const DEFAULT_CONCURRENCY = 4;
+
+function parseEnvInt(value: string | undefined, fallback: number): number {
+  const parsed = Number.parseInt(value || "", 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+const DEEPFACE_TIMEOUT_MS = parseEnvInt(
+  process.env.DEEPFACE_TIMEOUT_MS,
+  DEFAULT_TIMEOUT_MS
+);
+const DEEPFACE_CONCURRENCY = parseEnvInt(
+  process.env.DEEPFACE_CONCURRENCY,
+  DEFAULT_CONCURRENCY
+);
+
+let activeRequests = 0;
+const pendingRequests: Array<() => void> = [];
+
+async function withConcurrency<T>(fn: () => Promise<T>): Promise<T> {
+  if (!Number.isFinite(DEEPFACE_CONCURRENCY) || DEEPFACE_CONCURRENCY <= 0) {
+    return fn();
+  }
+
+  if (activeRequests >= DEEPFACE_CONCURRENCY) {
+    await new Promise<void>((resolve) => pendingRequests.push(resolve));
+  }
+
+  activeRequests += 1;
+  try {
+    return await fn();
+  } finally {
+    activeRequests -= 1;
+    const next = pendingRequests.shift();
+    if (next) {
+      next();
+    }
+  }
+}
 
 interface FaceEmbedding {
   embedding: number[];
@@ -37,41 +77,52 @@ export async function generateFaceNet512Embedding(
   imageUrl: string,
   enforceDetection: boolean = false
 ): Promise<DeepFaceResult> {
-  try {
-    const response = await fetch(`${DEEPFACE_API}/represent`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        img: imageUrl,
-        model_name: "Facenet512",
-        detector_backend: "retinaface",
-        enforce_detection: enforceDetection,
-      }),
-    });
+  return withConcurrency(async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), DEEPFACE_TIMEOUT_MS);
 
-    if (!response.ok) {
-      const text = await response.text().catch(() => "");
-      const normalized = text.toLowerCase();
+    try {
+      const response = await fetch(`${DEEPFACE_API}/represent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          img: imageUrl,
+          model_name: "Facenet512",
+          detector_backend: "retinaface",
+          enforce_detection: enforceDetection,
+        }),
+        signal: controller.signal,
+      });
 
-      if (
-        normalized.includes("could not be detected") ||
-        normalized.includes("no face") ||
-        normalized.includes("no faces")
-      ) {
-        return { faces: [], error: "No face detected in image" };
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        const normalized = text.toLowerCase();
+
+        if (
+          normalized.includes("could not be detected") ||
+          normalized.includes("no face") ||
+          normalized.includes("no faces")
+        ) {
+          return { faces: [], error: "No face detected in image" };
+        }
+
+        return { faces: [], error: `DeepFace API error ${response.status}: ${text.slice(0, 200)}` };
       }
 
-      return { faces: [], error: `DeepFace API error ${response.status}: ${text.slice(0, 200)}` };
+      const data = await response.json();
+      const faces = parseFaces(data);
+
+      return { faces };
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        return { faces: [], error: `DeepFace request timed out after ${DEEPFACE_TIMEOUT_MS}ms` };
+      }
+      const message = err instanceof Error ? err.message : "Unknown error";
+      return { faces: [], error: `DeepFace request failed: ${message}` };
+    } finally {
+      clearTimeout(timeout);
     }
-
-    const data = await response.json();
-    const faces = parseFaces(data);
-
-    return { faces };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return { faces: [], error: `DeepFace request failed: ${message}` };
-  }
+  });
 }
 
 export async function generateEmbeddingFromBase64(

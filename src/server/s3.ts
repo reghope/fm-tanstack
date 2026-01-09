@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
+import { MAX_IMAGE_BYTES, getBase64ByteSize } from "@/server/limits";
 
 const ACCOUNT_ID = process.env.S3_ACCOUNT_ID || "";
 const BUCKET_NAME = process.env.S3_BUCKET || "facematch-s3";
@@ -23,6 +24,15 @@ export async function uploadImage(
   base64Data: string,
   filename: string
 ): Promise<string> {
+  const byteSize = getBase64ByteSize(base64Data);
+  if (!byteSize) {
+    throw new Error("Invalid image data");
+  }
+
+  if (byteSize > MAX_IMAGE_BYTES) {
+    throw new Error(`Image exceeds ${MAX_IMAGE_BYTES} bytes`);
+  }
+
   const base64Content = base64Data.replace(/^data:image\/\w+;base64,/, "");
   const buffer = Buffer.from(base64Content, "base64");
 
