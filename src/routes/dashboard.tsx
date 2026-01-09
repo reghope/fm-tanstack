@@ -132,6 +132,7 @@ export const Route = createFileRoute('/dashboard')({
 })
 
 function Dashboard() {
+  const refreshIntervalMs = 15000
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -201,6 +202,9 @@ function Dashboard() {
       setError('Enter your API key to continue.')
       return
     }
+    if (isRefreshing) {
+      return
+    }
 
     setIsRefreshing(true)
     setError(null)
@@ -246,6 +250,22 @@ function Dashboard() {
 
     void loadSession()
   }, [])
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return
+    }
+
+    const intervalId = window.setInterval(() => {
+      if (!isRefreshing) {
+        void refresh(true)
+      }
+    }, refreshIntervalMs)
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [isAuthenticated, isRefreshing])
 
   const handleConnect = async (event: FormEvent) => {
     event.preventDefault()
