@@ -1,8 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
+import {
+  isDashboardAuthenticated,
+  verifyDashboardApiKey,
+} from '@/server/dashboard-auth'
 
 const API_BASE_URL = process.env.API_BASE_URL || ''
-const EXPECTED_API_KEY = process.env.API_KEY || ''
 
 type DashboardIntent =
   | 'list'
@@ -73,16 +76,12 @@ async function apiRequest(
   return readJsonSafe(response)
 }
 
-function requireApiKey(apiKey?: string) {
-  if (!EXPECTED_API_KEY) {
-    return { ok: false, status: 500, message: 'API_KEY is not configured' }
+function requireDashboardAuth(request: Request, apiKey?: string) {
+  if (isDashboardAuthenticated(request)) {
+    return { ok: true as const }
   }
 
-  if (!apiKey || apiKey !== EXPECTED_API_KEY) {
-    return { ok: false, status: 401, message: 'Invalid API key' }
-  }
-
-  return { ok: true as const }
+  return verifyDashboardApiKey(apiKey)
 }
 
 export const Route = createFileRoute('/api/dashboard')({
@@ -97,7 +96,7 @@ export const Route = createFileRoute('/api/dashboard')({
           return json({ error: 'Invalid JSON body' }, { status: 400 })
         }
 
-        const auth = requireApiKey(body.apiKey)
+        const auth = requireDashboardAuth(request, body.apiKey)
         if (!auth.ok) {
           return json({ error: auth.message }, { status: auth.status })
         }

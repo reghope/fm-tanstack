@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
   AlertCircle,
   CheckCircle2,
@@ -110,14 +110,13 @@ function getStatusStyles(status: string) {
 }
 
 async function dashboardRequest(
-  apiKey: string,
   intent: string,
   payload?: Record<string, unknown>
 ) {
   const response = await fetch('/api/dashboard', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ apiKey, intent, payload }),
+    body: JSON.stringify({ intent, payload }),
   })
 
   const data = await response.json().catch(() => ({}))
@@ -134,8 +133,9 @@ export const Route = createFileRoute('/dashboard')({
 
 function Dashboard() {
   const [apiKeyInput, setApiKeyInput] = useState('')
-  const [apiKey, setApiKey] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isCheckingSession, setIsCheckingSession] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
@@ -172,8 +172,8 @@ function Dashboard() {
     intent: string,
     payload?: Record<string, unknown>
   ) => {
-    if (!apiKey) {
-      setError('Enter your API key to continue.')
+    if (!isAuthenticated) {
+      setError('You must be authenticated to run actions.')
       return null
     }
     setIsLoading(true)
@@ -181,7 +181,7 @@ function Dashboard() {
     setSuccess(null)
 
     try {
-      const data = await dashboardRequest(apiKey, intent, payload)
+      const data = await dashboardRequest(intent, payload)
       return data
     } catch (requestError) {
       setError(
@@ -195,9 +195,8 @@ function Dashboard() {
     }
   }
 
-  const refresh = async (overrideKey?: string) => {
-    const key = overrideKey || apiKey
-    if (!key) {
+  const refresh = async (force?: boolean) => {
+    if (!isAuthenticated && !force) {
       setError('Enter your API key to continue.')
       return
     }
@@ -207,7 +206,7 @@ function Dashboard() {
     setSuccess(null)
 
     try {
-      const data = await dashboardRequest(key, 'list')
+      const data = await dashboardRequest('list')
       setSitemapJobs(getJobList(data.sitemapJobs))
       setScrapeBatches(getJobList(data.scrapeBatches))
       setUploadJobs(getJobList(data.uploadJobs))
@@ -226,10 +225,75 @@ function Dashboard() {
     }
   }
 
+  useEffect(() => {
+    const loadSession = async () => {
+      setIsCheckingSession(true)
+      try {
+        const response = await fetch('/api/dashboard-auth')
+        const data = await response.json().catch(() => ({}))
+        const authenticated = Boolean(data.authenticated)
+        setIsAuthenticated(authenticated)
+        if (authenticated) {
+          await refresh(true)
+        }
+      } catch {
+        setIsAuthenticated(false)
+      } finally {
+        setIsCheckingSession(false)
+      }
+    }
+
+    void loadSession()
+  }, [])
+
   const handleConnect = async (event: FormEvent) => {
     event.preventDefault()
-    setApiKey(apiKeyInput)
-    await refresh(apiKeyInput)
+    setIsLoading(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const response = await fetch('/api/dashboard-auth', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ apiKey: apiKeyInput }),
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(data.error || 'Authentication failed')
+      }
+      setIsAuthenticated(true)
+      setApiKeyInput('')
+      setSuccess('Authenticated.')
+      await refresh(true)
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'Authentication failed'
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    setIsLoading(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      await fetch('/api/dashboard-auth', { method: 'DELETE' })
+      setIsAuthenticated(false)
+      setSitemapJobs([])
+      setScrapeBatches([])
+      setUploadJobs([])
+      setQueues(null)
+      setSuccess('Logged out.')
+    } catch {
+      setError('Unable to log out.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleCreateCrawl = async (event: FormEvent) => {
@@ -323,7 +387,7 @@ function Dashboard() {
             <Button
               type="button"
               onClick={() => refresh()}
-              disabled={!apiKey || isLoading}
+              disabled={!isAuthenticated || isLoading}
               className="gap-2"
             >
               <RefreshCcw className="h-4 w-4" />
@@ -333,6 +397,16 @@ function Dashboard() {
               <span className="text-xs text-slate-500">
                 Updated {lastUpdated.toLocaleTimeString()}
               </span>
+            )}
+            {isAuthenticated && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleLogout}
+                disabled={isLoading}
+              >
+                Log out
+              </Button>
             )}
           </div>
         </header>
@@ -346,37 +420,45 @@ function Dashboard() {
           </CardHeader>
           <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
             <form onSubmit={handleConnect} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  API Key
-                </label>
-                <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-                  <input
-                    type="password"
-                    value={apiKeyInput}
-                    onChange={(event) => setApiKeyInput(event.target.value)}
-                    placeholder="Enter API key"
-                    className={inputClassName}
-                  />
-                  <Button
-                    type="submit"
-                    disabled={!apiKeyInput || isLoading}
-                    className="gap-2"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    Connect
-                  </Button>
+              {!isAuthenticated && (
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    API Key
+                  </label>
+                  <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+                    <input
+                      type="password"
+                      value={apiKeyInput}
+                      onChange={(event) => setApiKeyInput(event.target.value)}
+                      placeholder="Enter API key"
+                      className={inputClassName}
+                    />
+                    <Button
+                      type="submit"
+                      disabled={!apiKeyInput || isLoading}
+                      className="gap-2"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      Connect
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="rounded-lg border border-slate-200/80 bg-white/80 p-4">
                 <div className="flex items-center justify-between text-sm text-slate-600">
                   <span>Status</span>
                   <span
                     className={`rounded-full px-2 py-1 text-xs font-medium ${
-                      apiKey ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100'
+                      isAuthenticated
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-slate-100'
                     }`}
                   >
-                    {apiKey ? 'Authenticated' : 'Locked'}
+                    {isCheckingSession
+                      ? 'Checking'
+                      : isAuthenticated
+                        ? 'Authenticated'
+                        : 'Locked'}
                   </span>
                 </div>
                 {error && (
@@ -397,7 +479,9 @@ function Dashboard() {
             <div className="grid gap-4 sm:grid-cols-2">
               {queueEntries.length === 0 && (
                 <div className="rounded-lg border border-dashed border-slate-300 p-6 text-sm text-slate-500">
-                  Queue stats load after authentication.
+                  {isAuthenticated
+                    ? 'Queue stats unavailable.'
+                    : 'Queue stats load after authentication.'}
                 </div>
               )}
               {queueEntries.map(([queueName, queue]) => {
@@ -495,7 +579,7 @@ function Dashboard() {
                     />
                   </div>
                 </div>
-                <Button type="submit" disabled={!apiKey || isLoading}>
+                <Button type="submit" disabled={!isAuthenticated || isLoading}>
                   Start Crawl
                 </Button>
               </form>
@@ -643,7 +727,7 @@ function Dashboard() {
                     </label>
                   </div>
                 </div>
-                <Button type="submit" disabled={!apiKey || isLoading}>
+                <Button type="submit" disabled={!isAuthenticated || isLoading}>
                   Start Scrape
                 </Button>
               </form>
@@ -665,7 +749,7 @@ function Dashboard() {
                   type="button"
                   variant="outline"
                   onClick={() => handleBulkSitemap('pause')}
-                  disabled={!apiKey || isLoading}
+                  disabled={!isAuthenticated || isLoading}
                   className="gap-2"
                 >
                   <Pause className="h-4 w-4" />
@@ -675,7 +759,7 @@ function Dashboard() {
                   type="button"
                   variant="outline"
                   onClick={() => handleBulkSitemap('resume')}
-                  disabled={!apiKey || isLoading}
+                  disabled={!isAuthenticated || isLoading}
                   className="gap-2"
                 >
                   <Play className="h-4 w-4" />
@@ -685,7 +769,7 @@ function Dashboard() {
                   type="button"
                   variant="destructive"
                   onClick={() => handleBulkSitemap('delete')}
-                  disabled={!apiKey || isLoading}
+                  disabled={!isAuthenticated || isLoading}
                   className="gap-2"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -725,7 +809,7 @@ function Dashboard() {
                           type="button"
                           variant="outline"
                           onClick={() => handleSitemapAction(id, 'pause')}
-                          disabled={!apiKey || isLoading}
+                          disabled={!isAuthenticated || isLoading}
                           className="gap-2"
                         >
                           <Pause className="h-4 w-4" />
@@ -735,7 +819,7 @@ function Dashboard() {
                           type="button"
                           variant="outline"
                           onClick={() => handleSitemapAction(id, 'resume')}
-                          disabled={!apiKey || isLoading}
+                          disabled={!isAuthenticated || isLoading}
                           className="gap-2"
                         >
                           <Play className="h-4 w-4" />
@@ -745,7 +829,7 @@ function Dashboard() {
                           type="button"
                           variant="destructive"
                           onClick={() => handleSitemapAction(id, 'delete')}
-                          disabled={!apiKey || isLoading}
+                          disabled={!isAuthenticated || isLoading}
                           className="gap-2"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -801,7 +885,7 @@ function Dashboard() {
                             type="button"
                             variant="destructive"
                             onClick={() => handleScrapeCancel(id)}
-                            disabled={!apiKey || isLoading}
+                            disabled={!isAuthenticated || isLoading}
                             className="gap-2"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -856,7 +940,7 @@ function Dashboard() {
                             type="button"
                             variant="destructive"
                             onClick={() => handleUploadCancel(id)}
-                            disabled={!apiKey || isLoading}
+                            disabled={!isAuthenticated || isLoading}
                             className="gap-2"
                           >
                             <Trash2 className="h-4 w-4" />
