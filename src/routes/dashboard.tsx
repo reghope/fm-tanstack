@@ -134,6 +134,7 @@ export const Route = createFileRoute('/dashboard')({
 function Dashboard() {
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [isCheckingSession, setIsCheckingSession] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -201,7 +202,7 @@ function Dashboard() {
       return
     }
 
-    setIsLoading(true)
+    setIsRefreshing(true)
     setError(null)
     setSuccess(null)
 
@@ -221,7 +222,7 @@ function Dashboard() {
           : 'Unable to load jobs'
       )
     } finally {
-      setIsLoading(false)
+      setIsRefreshing(false)
     }
   }
 
@@ -466,7 +467,7 @@ function Dashboard() {
             <Button
               type="button"
               onClick={() => refresh()}
-              disabled={!isAuthenticated || isLoading}
+              disabled={!isAuthenticated || isRefreshing}
               className="gap-2"
             >
               <RefreshCcw className="h-4 w-4" />
